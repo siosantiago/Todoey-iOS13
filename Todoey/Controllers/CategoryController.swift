@@ -8,8 +8,9 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
-class CategoryController: UITableViewController {
+class CategoryController: SwipeTableViewController {
     
     let realm = try! Realm()
     
@@ -18,7 +19,8 @@ class CategoryController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadData()
-        
+        tableView.rowHeight = 80
+        tableView.separatorStyle = .none
     }
     // MARK: - TableView Datasource Methods
     
@@ -27,10 +29,14 @@ class CategoryController: UITableViewController {
         return categories?.count ?? 1
     }
     
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
+        
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No categories added yet"
+        cell.backgroundColor = UIColor(hexString: categories?[indexPath.row].color ?? "FFFFFF")
+        
         
         return cell
     }
@@ -52,6 +58,20 @@ class CategoryController: UITableViewController {
         
     }
     
+    // MARK: - Delete Data From Swipe
+    
+    override func updateModel(at indexPath: IndexPath) {
+        do {
+            try self.realm.write() {
+                if let safeCategory = self.categories?[indexPath.row] {
+                    self.realm.delete(safeCategory)
+                }
+            }
+        }catch {
+            print("Error")
+        }
+    }
+    
    // MARK: - Add New Categories
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -62,7 +82,7 @@ class CategoryController: UITableViewController {
             
             let newCategory = Category()
             newCategory.name = textField.text!
-            
+            newCategory.color = UIColor.randomFlat().hexValue()
             self.save(category: newCategory)
         }
         alert.addAction(action)
@@ -87,4 +107,6 @@ class CategoryController: UITableViewController {
             destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
+
+    
 }
